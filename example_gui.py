@@ -9,10 +9,10 @@ thanks to a QueueListener that sends custom signals
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QVBoxLayout, QGridLayout, QLineEdit
 
-from arte_qt_gui import ArteQtGui
+from quick_qt_gui import QuickQtGui
 
 
-class ExampleGui(ArteQtGui):
+class ExampleGui(QuickQtGui):
 
    def __init__(self, qin, qout):
        super().__init__(qin, qout, self.on_data)

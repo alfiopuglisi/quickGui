@@ -4,7 +4,7 @@ Arte GUI framework
 
 from PyQt5.QtCore import pyqtSignal, QThread
 
-class ArteQtGui():
+class QuickQtGui():
    '''
    A GUI base class using PyQt to listen to the task queue
 
@@ -12,8 +12,8 @@ class ArteQtGui():
    communication queues and a callback that will be called
    every time something is received on the input queue.
 
-   Also the derived class must provide the vent loop using
-   a QApplication.
+   Also the derived class must provide the event loop using
+   QApplication.exec_().
    '''
 
    def __init__(self, qin, qout, data_callback):
@@ -25,7 +25,6 @@ class ArteQtGui():
        self._data_callback = data_callback
 
    def send(self, data):
-       print('Sending ',data)
        self.qout.put(data)
 
    def _received(self, i):

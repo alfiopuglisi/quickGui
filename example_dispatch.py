@@ -4,6 +4,8 @@ and displays the result.
 Communication with the background task is asynchronous
 thanks to a QueueListener that sends custom signals
 
+This version uses decorators to trigger methods
+when a command arrives from the input queue.
 '''
 
 import sys

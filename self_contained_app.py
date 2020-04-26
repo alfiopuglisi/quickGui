@@ -5,6 +5,9 @@ a task and a GUI using multiprocessing.
 Both task and GUI must be callables and accept
 two arguments in order to receive the 
 communication queues.
+
+The task is spawned using multiprocessing,
+therefore it cannot use this module.
 '''
 
 import multiprocessing as mp

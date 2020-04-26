@@ -2,13 +2,11 @@
 Arte GUI framework
 '''
 
-from PyQt5.QtCore import pyqtSignal, QThread
-
-from arte_qt_gui import ArteQtGui
+from quick_qt_gui import QuickQtGui
 
 HIDDEN_ATTR = '__handle_for'
 
-class DispatchingGui(ArteQtGui):
+class DispatchingGui(QuickQtGui):
    '''
    '''
 
