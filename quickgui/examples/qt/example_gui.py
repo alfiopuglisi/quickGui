@@ -9,7 +9,7 @@ thanks to a QueueListener that sends custom signals
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QVBoxLayout, QGridLayout, QLineEdit
 
-from quick_qt_gui import QuickQtGui
+from quickgui.framework.quick_qt_gui import QuickQtGui
 
 
 class ExampleGui(QuickQtGui):
