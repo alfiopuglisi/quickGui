@@ -11,10 +11,10 @@ when a command arrives from the input queue.
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QVBoxLayout, QGridLayout, QLineEdit
 
-from dispatching_gui import DispatchingGui, cmd
+from quickgui.framework.dispatching_gui import DispatchingQtGui, handler
 
 
-class ExampleDispatch(DispatchingGui):
+class ExampleDispatch(DispatchingQtGui):
 
    def __init__(self, qin, qout):
        super().__init__(qin, qout)
@@ -48,7 +48,7 @@ class ExampleDispatch(DispatchingGui):
    def on_click(self):
        self.send(self.cmd.text())
 
-   @cmd('RESULT')
+   @handler('RESULT')
    def on_result(self, data):
        self.result.setText(str(data))
 
