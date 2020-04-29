@@ -20,13 +20,13 @@ class DispatchingQtGui(QuickQtGui):
             cmd = getattr(method, HIDDEN_ATTR, None)
             if cmd is not None:
                 print('Handler for %s is %s' % (cmd, str(method)))
-                self._handlers[cmd] = method
+                self._handlers[cmd.upper()] = method
 
     def _received(self, i):
         value = self._qlistener.get(i)
         cmd, value = value.split(maxsplit=1)
         try:
-            self._handlers[cmd](value)
+            self._handlers[cmd.upper()](value)
         except KeyError:
             print('No handler for command ' + cmd)
 

@@ -1,51 +1,50 @@
-'''
-A simple GUI which evaluates Python expressions
-and displays the result.
-Communication with the background task is asynchronous
-thanks to a QueueListener that sends custom signals
-
-'''
 
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QVBoxLayout, QGridLayout, QLineEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QWidget
+from PyQt5.QtWidgets import QPushButton, QGridLayout, QLineEdit
 
 from quickgui.framework.quick_qt_gui import QuickQtGui
 
 
 class ExampleGui(QuickQtGui):
+    '''
+    A simple GUI which evaluates Python expressions and displays the result.
 
-   def __init__(self, qin, qout):
-       super().__init__(qin, qout, self.on_data)
+    Communication with the background task is asynchronous
+    thanks to a QueueListener that sends custom signals
+    '''
 
-       app = QApplication(sys.argv)
+    def __init__(self, qin, qout):
+        super().__init__(qin, qout, self.on_data)
 
-       window = QWidget()
-       layout = QGridLayout()
+        app = QApplication(sys.argv)
 
-       self.cmd = QLineEdit()
-       layout.addWidget(QLabel('Cmd'), 0, 0)
-       layout.addWidget(self.cmd, 0, 1)
+        window = QWidget()
+        layout = QGridLayout()
 
-       button = QPushButton("Execute")
-       layout.addWidget(button, 1, 0)
+        self.cmd = QLineEdit()
+        layout.addWidget(QLabel('Cmd'), 0, 0)
+        layout.addWidget(self.cmd, 0, 1)
 
-       layout.addWidget(QLabel('Result'), 2, 0)
+        button = QPushButton("Execute")
+        layout.addWidget(button, 1, 0)
 
-       self.result = QLabel()
-       layout.addWidget(self.result, 2, 1)
-       window.setLayout(layout)
+        layout.addWidget(QLabel('Result'), 2, 0)
 
-       button.clicked.connect(self.on_click)
-       self.cmd.returnPressed.connect(self.on_click)
+        self.result = QLabel()
+        layout.addWidget(self.result, 2, 1)
+        window.setLayout(layout)
 
-       window.show()
-       app.exec_()
+        button.clicked.connect(self.on_click)
+        self.cmd.returnPressed.connect(self.on_click)
 
-   # Async action / response
+        window.show()
+        app.exec_()
 
-   def on_click(self):
-       self.send(self.cmd.text())
+    # Async action / response
 
-   def on_data(self, data):
-       self.result.setText(str(data))
+    def on_click(self):
+        self.send(self.cmd.text())
 
+    def on_data(self, data):
+        self.result.setText(str(data))

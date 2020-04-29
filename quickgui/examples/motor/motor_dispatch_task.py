@@ -1,30 +1,21 @@
 # -*- coding: utf-8 -*-
 
-import time
 import random
-import threading
 
-from quickgui.framework.dispatching_task import DispatchingTask, handler
+from quickgui.framework.dispatching_task import DispatchingTask, \
+                                                handler, periodic
 
 
 class Motor(DispatchingTask):
-    '''
-    Simple motor class
-
-    A class containing a motor, which can be a real one or
-    a simulated one.
-    '''
+    '''A class containing a motor, which can be real or simulated.'''
 
     def __init__(self, qin, qout, motor_class, simul_class):
         super().__init__(qin, qout)
         self.time_to_die = False
         self.motor_class = motor_class
         self.simul_class = simul_class
-        self.status_delay = 0.5
+        self.period = 0.5
         self.motor = simul_class()
-        self.motor_moving = False
-
-        threading.Thread(target=self.status_loop).start()
 
     def is_simulated(self):
         return self.motor.__class__ == self.simul_class
@@ -38,32 +29,17 @@ class Motor(DispatchingTask):
 
     @handler('MOVE')
     def move(self, pos):
-        if self.motor_moving:
-            raise Exception('another MOVE is already in progress')
-        else:
-            self.motor.moveto(float(pos))
-            self.motor_moving = True
-            return None    # Do not reply immediately
+        self.motor.moveto(float(pos))
 
-    def status_loop(self):
-        '''Status thread
+    @periodic
+    def refresh_status(self):
+        '''Refreshes the status and sends it over the output queue'''
+        moving, pos = self.motor.query()
+        simulated = (self.motor.__class__ == self.simul_class)
 
-        Runs forever that refreshes the status
-        and sends it over the output queue
-        '''
-        while not self.time_to_die:
-
-            time.sleep(self.status_delay)
-            moving, pos = self.motor.query()
-            if not moving and self.motor_moving:
-                self.cmd_reply('MOVE', 'OK')
-
-            self.motor_moving = moving
-            simulated = (self.motor.__class__ == self.simul_class)
-
-            self.qout.put('MOVING %s' % int(moving))
-            self.qout.put('POS %f' % pos)
-            self.qout.put('SIMULATED %d' % int(simulated))
+        self.qout.put('MOVING %s' % int(moving))
+        self.qout.put('POS %f' % pos)
+        self.qout.put('SIMULATED %d' % int(simulated))
 
 
 class SimulatedMotor():
@@ -71,7 +47,7 @@ class SimulatedMotor():
     A simulated motor
 
     This simulated motor is capable of moving at a certain speed
-    towards a target position.
+    towards a target position. Target position can be changed at any time.
     '''
 
     def __init__(self):
