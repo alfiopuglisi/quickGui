@@ -14,6 +14,7 @@ class QueueServer(socketserver.ThreadingTCPServer):
     from the task's output queue is replicated across all clients. If
     a client connection is too slow, some of the output data may be dropped.
     '''
+    allow_reuse_address = True
 
     def __init__(self, HOST, PORT, handler, qin, qout):
         super().__init__((HOST, PORT), handler)
@@ -48,15 +49,24 @@ class QueueHandler(socketserver.StreamRequestHandler):
 
     Writes all incoming data into the task input queue, and sends
     all the task's output into the socket. The two queues are managed
-    by separate threadsin order to simplify blocking calls management.
+    by separate threads in order to simplify the blocking calls management.
     '''
 
     def handle(self):
         self._time_to_die = False
-        self._p = threading.Thread(target=self.handle_out).start()
+        self._p = threading.Thread(target=self.handle_out)
+        self._p.start()
 
         while True:
-            msg = self.rfile.readline().strip()
+            print('Input thread looping')
+            try:
+                msg = self.rfile.readline().strip()
+                if not msg:
+                    print('Input thread exiting')
+                    return   # disconnected
+            except Exception:
+                print('Input thread exiting - unclean disconnect')
+                return
             self.server.qin.put(msg.decode('utf-8'))
 
     def handle_out(self):
@@ -70,6 +80,9 @@ class QueueHandler(socketserver.StreamRequestHandler):
                 self.wfile.write(msg.encode('utf-8'))
             except queue.Empty:
                 pass
+            except Exception:
+                print('Output thread exiting')
+                return
 
     def finish(self):
         self._time_to_die = True

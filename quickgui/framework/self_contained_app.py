@@ -9,44 +9,65 @@ communication queues.
 
 import queue
 import threading
+from collections.abc import Iterable
 
-from quickgui.framework.task_combiner import queue_tee
+from quickgui.framework.multi_queue import MultiQueue
+from quickgui.framework.pollable_queue import PollableQueue
 
-def start_app(task=None, gui=None, task_server=None, gui_client=None):
+
+def start(task=None, gui=None, task_servers=None, gui_client=None):
     '''
     task = task running in background
     gui: GUI running in foreground
-    task_server: optional server(s) for task, for remote connections
+    task_servers: optional server(s) for task, for remote connections
     gui_client: optional client for GUI, for remote connections
     '''
-    q1 = queue.Queue()
-    q2 = queue.Queue()
+    if task_servers is None:
+        task_servers = []
+    elif not isinstance(task_servers, Iterable):
+        task_servers = [task_servers]
+
+    if task_servers and not task:
+        raise Exception('Task servers can only be started together with tasks')
+    if gui_client and task:
+        raise Exception('GUI client can be started with GUIs only')
+
     joinables = []
 
     if task:
-        t = threading.Thread(target=task, args=(q1, q2))
+        n_out_queues = len(task_servers)
+        if gui:
+            n_out_queues += 1
+
+        qin = queue.Queue()
+        qout = MultiQueue(n_out_queues)
+        qout_gui = qout[-1]
+
+        for i, server in enumerate(task_servers):
+            t = threading.Thread(target=server, args=(qin, qout[i]))
+            t.start()
+            joinables.append(t)
+
+        t = threading.Thread(target=task, args=(qin, qout))
         t.start()
         joinables.append(t)
 
-    if task_server:
-        q2, q2_server = queue_tee(q2)
-        t2 = threading.Thread(target=task_server, args=(q1, q2_server))
-        t2.start()
-        joinables.append(t2)
-
     if gui_client:
-        g2 = threading.Thread(target=gui_client, args=(q1, q2))
-        g2.start()
-        joinables.append(g2)
+        qin = PollableQueue()
+        qout_gui = queue.Queue()
+        t = threading.Thread(target=gui_client, args=(qin, qout_gui))
+        t.start()
+        joinables.append(t)
 
     # Start GUI (with reversed queues)
     # This call will block until the gui quits.
     if gui:
-        gui(q2, q1)
+        gui(qout_gui, qin)
 
         if task:
             # Shutdown task when GUI exits
-            q1.put('QUIT')
+            print('start_app(): stopping task')
+            qin.put('QUIT')
 
     for joinable in joinables:
         joinable.join()

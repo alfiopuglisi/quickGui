@@ -65,6 +65,7 @@ class DispatchingTask():
                 cmd, *arg = self.qin.get().split(maxsplit=1)
             except ValueError:  # if the split does not work
                 continue
+            print('CMD: ',cmd)
             if cmd.lower() not in self._handlers:
                 print('No handler for command ' + cmd)
             else:
