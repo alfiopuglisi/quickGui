@@ -2,6 +2,7 @@
 
 import queue
 
+from quickgui.framework.pollable_queue import PollableQueue
 
 class MultiQueue():
     '''
@@ -12,7 +13,7 @@ class MultiQueue():
     '''
 
     def __init__(self, n):
-        self.qlist = [queue.Queue() for i in range(n)]
+        self.qlist = [PollableQueue() for i in range(n)]
 
     def __getitem__(self, idx):
         return self.qlist[idx]
