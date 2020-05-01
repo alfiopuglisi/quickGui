@@ -57,9 +57,14 @@ class QuickTask():
             except DispatchError as e:
                 print(e)
 
+    def send(self, cmd):
+        if cmd[-1] != '\n':
+            cmd += '\n'
+        self.qout.put(cmd)
+   
     @handler('quit')
     def quit_handler(self):
-        self.qout.put('quit')  # Tell clients that we are quitting
+        self.send('quit')     # Tell clients that we are quitting
         self.time_to_die = True
 
     @handler('periodic')

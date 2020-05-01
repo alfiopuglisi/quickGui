@@ -75,7 +75,7 @@ class QueueClient():
             msg = self.qout.get(block=False)
 
             # Do not propagate quit messages, it's our GUI shutting down
-            if msg.lower() == 'quit':
+            if msg.lower()[:4] == 'quit':
                 print('Client has quit, we quit too')
                 self.time_to_die = True
                 raise DisconnectedException

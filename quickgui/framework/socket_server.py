@@ -96,8 +96,6 @@ class QueueHandler(socketserver.StreamRequestHandler):
         with self.server.qout_copy(self.request) as qout:
 
             for msg in iter(qout.get, None):
-                if msg[-1] != '\n':
-                    msg += '\n'
                 self.wfile.write(msg.encode('utf-8'))
 
         print('Output thread exiting')

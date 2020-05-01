@@ -35,9 +35,9 @@ class Motor(QuickTask):
         moving, pos = self.motor.query()
         simulated = (self.motor.__class__ == self.simul_class)
 
-        self.qout.put('MOVING %s' % int(moving))
-        self.qout.put('POS %f' % pos)
-        self.qout.put('SIMULATED %d' % int(simulated))
+        self.send('MOVING %s' % int(moving))
+        self.send('POS %f' % pos)
+        self.send('SIMULATED %d' % int(simulated))
 
 
 class SimulatedMotor():

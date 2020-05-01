@@ -32,6 +32,8 @@ class QuickQtGui():
         self._qlistener.start()
 
     def send(self, data):
+        if data[-1] != '\n':
+            data += '\n'
         self.qout.put(data)
 
     def _received(self, i):
