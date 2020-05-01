@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import queue
-
 from quickgui.framework.pollable_queue import PollableQueue
 
 class MultiQueue():
