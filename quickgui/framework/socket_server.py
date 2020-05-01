@@ -32,19 +32,28 @@ class QueueServer(socketserver.ThreadingTCPServer):
         self.qin = qin
         self.qout = qout
         self.qout_clients = {}
+        self.lock = threading.Lock()  # For the global queue dictionary
         threading.Thread(target=self.fill_clients).start()
 
     @contextmanager
     def qout_copy(self, client_id):
         q = queue.Queue()
-        self.qout_clients[client_id] = q
+
+        # Lock the qout dict while updating it
+        with self.lock:
+            self.qout_clients[client_id] = q
+
+        # But not here because this yield can be really long
         try:
             yield q
         except Exception:
             pass
         finally:
-            del self.qout_clients[client_id]
-        
+
+            # Lock the qout dict while updating it
+            with self.lock:
+                del self.qout_clients[client_id]
+
     def fill_clients(self):
         '''
         Get data from the qout queue and send it to all client threads.
@@ -53,13 +62,14 @@ class QueueServer(socketserver.ThreadingTCPServer):
         '''
         while True:
             data = self.qout.get()
-            for k, q in self.qout_clients.items():
-                try:
-                    q.put(data, block=False)
-                except queue.Full:
-                    # Slow clients will drop messages and
-                    # should not block the rest.
-                    pass
+            with self.lock:
+                for q in self.qout_clients.values():
+                    try:
+                        q.put(data, block=False)
+                    except queue.Full:
+                        # Slow clients will drop messages and
+                        # should not block the rest.
+                        pass
             if data.strip().lower() == 'quit':  # Task has quit
                 print('task has quit, shutting down')
                 self.shutdown()
