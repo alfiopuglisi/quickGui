@@ -26,10 +26,10 @@ class QueueClient():
             self.connect()
             while not self.time_to_die:
                 try:
-                    r, _, _ = select.select([self.sock, self.qin], [], [])
+                    r, _, _ = select.select([self.sock, self.qout], [], [])
                     if self.sock in r:
                         self.read()
-                    if self.qin in r:
+                    if self.qout in r:
                         self.write()
                 except DisconnectedException:
                     self.disconnect()
@@ -40,7 +40,7 @@ class QueueClient():
         try:
             msg = self.sfile.readline()
             if msg:
-                self.qout.put(msg, block=False)
+                self.qin.put(msg, block=False)
             else:
                 print('recv giving up')
                 raise DisconnectedException
@@ -52,7 +52,7 @@ class QueueClient():
 
     def write(self):
         try:
-            msg = self.qin.get(block=False)
+            msg = self.qout.get(block=False)
 
             # Do not propagate quit messages, it's our GUI shutting down
             if msg.lower() == 'quit':

@@ -58,7 +58,7 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
     if gui_client:
         qin = PollableQueue()
         qout_gui = queue.Queue()
-        t = threading.Thread(target=gui_client, args=(qin, qout_gui))
+        t = threading.Thread(target=gui_client, args=(qout_gui, qin))
         t.start()
         joinables.append(t)
 
