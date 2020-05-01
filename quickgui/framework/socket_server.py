@@ -73,6 +73,9 @@ class QueueHandler(socketserver.StreamRequestHandler):
     Writes all incoming data into the task input queue, and sends
     all the task's output into the socket. The two queues are managed
     by separate threads in order to simplify the blocking calls management.
+    
+    When the connection is closed for any reason, all the threads exit
+    cleanly catching their exceptions.
     '''
 
     def handle(self):

@@ -43,6 +43,11 @@ class QueueClient():
 
         Loop forever trying to reconnect if the connection fails,
         and keep the queues active in any case.
+
+        Unlike in socket_server, we don't use threads because we want
+        to handle reconnects transparently, and having asynchronous
+        read/write becomes too complicated when the underlying socket
+        changes without warning.
         '''
         while not self.time_to_die:
             self.connect()
