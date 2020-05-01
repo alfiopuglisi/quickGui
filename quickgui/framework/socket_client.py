@@ -1,11 +1,9 @@
 # -*- coding: utf-8 -*-
 
-import os
 import time
 import queue
 import socket
 import select
-import threading
 import functools
 
 

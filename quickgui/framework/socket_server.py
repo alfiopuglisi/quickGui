@@ -105,5 +105,6 @@ def _start_server(host, port, qin, qout):
         server.serve_forever()
         print('start_server exiting')
 
+
 def get_server(host, port):
     return functools.partial(_start_server, host, port)

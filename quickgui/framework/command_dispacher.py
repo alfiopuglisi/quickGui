@@ -31,6 +31,7 @@ def handler_float(cmd):
 def handler_str(cmd):
     return handler(cmd, validator=str)
 
+
 class CommandDispatcher:
 
     def __init__(self):
@@ -43,13 +44,14 @@ class CommandDispatcher:
             info = getattr(method, HIDDEN_ATTR, None)
             if info is not None:
                 print('Handler for %s is %s' % (info.cmd, str(method)))
-                self._handlers[info.cmd.lower()] = Handler(method, info.validator)
+                self._handlers[info.cmd.lower()] = Handler(method,
+                                                           info.validator)
 
     def dispatch(self, cmd, *arg):
         cmd = cmd.lower()
         if cmd not in self._handlers:
             raise DispatchError('No handler for command ' + cmd)
-            
+
         handler = self._handlers[cmd]
         if len(arg) > 0 and handler.validator is not None:
             try:

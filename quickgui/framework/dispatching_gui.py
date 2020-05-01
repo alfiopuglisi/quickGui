@@ -3,7 +3,7 @@ Arte GUI framework
 '''
 
 from quickgui.framework.quick_qt_gui import QuickQtGui
-from quickgui.framework.command_dispacher import CommandDispatcher, handler, \
+from quickgui.framework.command_dispacher import CommandDispatcher, \
                                                  DispatchError
 
 
@@ -21,7 +21,8 @@ class DispatchingQtGui(QuickQtGui):
         try:
             cmd, *arg = msg.split(maxsplit=1)
         except ValueError:  # if the split does not work
-            return        
+            return
+
         try:
             self.dispatcher.dispatch(cmd, *arg)
         except DispatchError as e:

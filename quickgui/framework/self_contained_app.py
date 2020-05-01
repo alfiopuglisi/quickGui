@@ -17,11 +17,14 @@ from quickgui.framework.pollable_queue import PollableQueue
 
 def start(task=None, gui=None, task_servers=None, gui_client=None):
     '''
+    App launcher
+
     task = task running in background
     gui: GUI running in foreground
     task_servers: optional server(s) for task, for remote connections
     gui_client: optional client for GUI, for remote connections
     '''
+
     if task_servers is None:
         task_servers = []
     elif not isinstance(task_servers, Iterable):
@@ -73,29 +76,19 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
         joinable.join()
 
 
-import multiprocessing as mp
-
 def self_contained_app(task, gui):
 
-   q1 = mp.Queue()
-   q2 = mp.Queue()
+    q1 = queue.Queue()
+    q2 = queue.Queue()
 
-   # Spawn task
+    # Spawn task
 
-   p = mp.Process(target = task, args=(q1, q2))
-   p.start()
+    t = threading.Thread(target=task, args=(q1, q2))
+    t.start()
 
-   # Start GUI (with reversed queues)
-   gui(q2, q1)
+    # Start GUI (with reversed queues)
+    gui(q2, q1)
 
-   # Shutdown task
-   q1.put(None)
-   p.join()
-
-
-
-        
-    
-    
-    
-    
+    # Shutdown task
+    q1.put('quit')
+    t.join()
