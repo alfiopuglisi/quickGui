@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
-HIDDEN_ATTR = '__handle_for'
+from collections import namedtuple
+
+HIDDEN_ATTR = '__handle_func'
+
+Info = namedtuple('Info', 'cmd validator')
+Handler = namedtuple('Handler', 'func validator')
 
 
-def handler(cmd):
+def handler(cmd, validator=None):
     '''Decorator for command handlers'''
     def decorator(f):
-        setattr(f, HIDDEN_ATTR, cmd)
+        setattr(f, HIDDEN_ATTR, Info(cmd, validator))
         return f
     return decorator
 
@@ -14,6 +19,17 @@ def handler(cmd):
 class DispatchError(Exception):
     pass
 
+
+def handler_int(cmd):
+    return handler(cmd, validator=int)
+
+
+def handler_float(cmd):
+    return handler(cmd, validator=float)
+
+
+def handler_str(cmd):
+    return handler(cmd, validator=str)
 
 class CommandDispatcher:
 
@@ -24,16 +40,24 @@ class CommandDispatcher:
 
         for name in dir(obj):
             method = getattr(obj, name)
-            cmd = getattr(method, HIDDEN_ATTR, None)
-            if cmd is not None:
-                print('Handler for %s is %s' % (cmd, str(method)))
-                self._handlers[cmd.lower()] = method
+            info = getattr(method, HIDDEN_ATTR, None)
+            if info is not None:
+                print('Handler for %s is %s' % (info.cmd, str(method)))
+                self._handlers[info.cmd.lower()] = Handler(method, info.validator)
 
     def dispatch(self, cmd, *arg):
-        if cmd.lower() not in self._handlers:
+        cmd = cmd.lower()
+        if cmd not in self._handlers:
             raise DispatchError('No handler for command ' + cmd)
-        else:
+            
+        handler = self._handlers[cmd]
+        if len(arg) > 0 and handler.validator is not None:
             try:
-                self._handlers[cmd.lower()](*arg)
-            except Exception as e:
-                print('Exception handling command %s: %s' % (cmd, str(e)))
+                arg = [handler.validator(arg[0])]
+            except Exception:
+                print('Invalid argument for command %s' % cmd)
+                return
+        try:
+            handler.func(*arg)
+        except Exception as e:
+            print('Exception handling command %s: %s' % (cmd, str(e)))

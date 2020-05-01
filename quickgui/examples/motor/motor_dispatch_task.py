@@ -3,7 +3,8 @@
 import random
 
 from quickgui.framework.dispatching_task import DispatchingTask, \
-                                                handler, periodic
+                                                handler_int, handler_float, \
+                                                periodic
 
 
 class Motor(DispatchingTask):
@@ -20,16 +21,16 @@ class Motor(DispatchingTask):
     def is_simulated(self):
         return self.motor.__class__ == self.simul_class
 
-    @handler('SIMUL')
+    @handler_int('SIMUL')
     def simul(self, enable):
-        if int(enable) != 0 and not self.is_simulated():
+        if enable != 0 and not self.is_simulated():
             self.motor = self.simul_class()
-        elif int(enable) == 0 and self.is_simulated():
+        elif enable == 0 and self.is_simulated():
             self.motor = self.motor_class()
 
-    @handler('MOVE')
+    @handler_float('MOVE')
     def move(self, pos):
-        self.motor.moveto(float(pos))
+        self.motor.moveto(pos)
 
     @periodic
     def refresh_status(self):

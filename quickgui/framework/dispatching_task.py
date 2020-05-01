@@ -15,7 +15,9 @@ import time
 import threading
 
 from quickgui.framework.command_dispacher import CommandDispatcher, handler, \
-                                                 DispatchError
+                                                 DispatchError, handler_int, \
+                                                 handler_float
+                                              
 
 
 def periodic(f):
