@@ -4,6 +4,9 @@ Arte GUI framework
 
 from PyQt5.QtCore import pyqtSignal, QThread
 
+from quickgui.framework.command_dispacher import CommandDispatcher, \
+                                                 DispatchError
+
 
 class QuickQtGui():
     '''
@@ -17,20 +20,31 @@ class QuickQtGui():
     QApplication.exec_().
     '''
 
-    def __init__(self, qin, qout, data_callback):
+    def __init__(self, qin, qout):
         self.qin = qin
         self.qout = qout
+
+        self.dispatcher = CommandDispatcher()
+        self.dispatcher.collect_handlers_from(self)
+
         self._qlistener = self._QueueListener(qin)
         self._qlistener.signal.connect(self._received)
         self._qlistener.start()
-        self._data_callback = data_callback
 
     def send(self, data):
         self.qout.put(data)
 
     def _received(self, i):
-        value = self._qlistener.get(i)
-        self._data_callback(value)
+        msg = self._qlistener.get(i)
+        try:
+            cmd, *arg = msg.split(maxsplit=1)
+        except ValueError:  # if the split does not work
+            return
+
+        try:
+            self.dispatcher.dispatch(cmd, *arg)
+        except DispatchError as e:
+            print(e)
 
     class _QueueListener(QThread):
 

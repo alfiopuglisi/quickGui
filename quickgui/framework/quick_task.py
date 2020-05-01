@@ -23,7 +23,7 @@ def periodic(f):
     return handler('periodic')(f)
 
 
-class DispatchingTask():
+class QuickTask():
     '''
     A task that dispatches commands to handler functions
 

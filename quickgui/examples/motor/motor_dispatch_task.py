@@ -2,10 +2,10 @@
 
 import random
 
-from quickgui.framework import DispatchingTask, periodic, \
+from quickgui.framework import QuickTask, periodic, \
                                handler_int, handler_float
 
-class Motor(DispatchingTask):
+class Motor(QuickTask):
     '''A class containing a motor, which can be real or simulated.'''
 
     def __init__(self, qin, qout, motor_class, simul_class):

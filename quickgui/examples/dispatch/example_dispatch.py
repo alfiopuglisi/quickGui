@@ -11,10 +11,10 @@ when a command arrives from the input queue.
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QPushButton, QVBoxLayout, QGridLayout, QLineEdit
 
-from quickgui.framework.dispatching_gui import DispatchingQtGui, handler
+from quickgui.framework import QuickQtGui, handler
 
 
-class ExampleDispatch(DispatchingQtGui):
+class ExampleDispatch(QuickQtGui):
 
    def __init__(self, qin, qout):
        super().__init__(qin, qout)
