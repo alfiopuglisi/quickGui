@@ -4,6 +4,7 @@ import threading
 import functools
 import socketserver
 
+from contextlib import contextmanager
 
 class QueueServer(socketserver.ThreadingTCPServer):
     '''
@@ -33,14 +34,17 @@ class QueueServer(socketserver.ThreadingTCPServer):
         self.qout_clients = {}
         threading.Thread(target=self.fill_clients).start()
 
-    def get_qout_copy(self, client_id):
+    @contextmanager
+    def qout_copy(self, client_id):
         q = queue.Queue()
         self.qout_clients[client_id] = q
-        return q
-
-    def delete_qout_copy(self, client_id):
-        del self.qout_clients[client_id]
-
+        try:
+            yield q
+        except Exception:
+            pass
+        finally:
+            del self.qout_clients[client_id]
+        
     def fill_clients(self):
         '''
         Get data from the qout queue and send it to all client threads.
@@ -76,47 +80,27 @@ class QueueHandler(socketserver.StreamRequestHandler):
 
         Loops forever until:
         - the client disconnects, or
-        - the server is shutdown.
+        - the server is shutdown
         '''
-        self._time_to_die = False
-        self._p = threading.Thread(target=self.handle_out)
-        self._p.start()
+        threading.Thread(target=self.handle_out).start()
 
-        while True:
-            print('Input thread looping')
-            try:
-                msg = self.rfile.readline().strip()
-                if not msg:
-                    print('Input thread exiting')
-                    return   # disconnected
-            except Exception:
-                print('Input thread exiting - unclean disconnect')
-                return
-            self.server.qin.put(msg.decode('utf-8'))
-        print('Input thread exiting')
+        try:
+            for msg in iter(self.rfile.readline, b''):
+                self.server.qin.put(msg.decode('utf-8'))
+        except Exception as e:
+            print('Exception in input thread:', e)
 
     def handle_out(self):
         '''Handler for data going to the client's socket'''
-        qout = self.server.get_qout_copy(self.request)
-        while not self._time_to_die:
-            try:
-                msg = qout.get(timeout=1)  # Cycle the loop every now and then
+        
+        with self.server.qout_copy(self.request) as qout:
+
+            for msg in iter(qout.get, None):
                 if msg[-1] != '\n':
                     msg += '\n'
                 self.wfile.write(msg.encode('utf-8'))
 
-            except queue.Empty:
-                pass
-            except Exception:
-                print('Output thread exception')
-                return
         print('Output thread exiting')
-
-    def finish(self):
-        self._time_to_die = True   # Stop the handle_out thread
-        self._p.join()
-        self.server.delete_qout_copy(self.request)
-
 
 def _start_server(host, port, qin, qout):
 
