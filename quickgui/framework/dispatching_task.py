@@ -14,15 +14,8 @@ even if the task does not do anything.
 import time
 import threading
 
-HIDDEN_ATTR = '__handle_for'
-
-
-def handler(cmd):
-    '''Decorator for command handlers'''
-    def decorator(f):
-        setattr(f, HIDDEN_ATTR, cmd)
-        return f
-    return decorator
+from quickgui.framework.command_dispacher import CommandDispatcher, handler, \
+                                                 DispatchError
 
 
 def periodic(f):
@@ -47,15 +40,9 @@ class DispatchingTask():
         self.qin = qin
         self.qout = qout
         self.time_to_die = False
-        self._handlers = {}
         self.period = 1
-
-        for name in dir(self):
-            method = getattr(self, name)
-            cmd = getattr(method, HIDDEN_ATTR, None)
-            if cmd is not None:
-                print('Handler for %s is %s' % (cmd, str(method)))
-                self._handlers[cmd.lower()] = method
+        self.dispatcher = CommandDispatcher()
+        self.dispatcher.collect_handlers_from(self)
 
     def run(self):
         threading.Thread(target=self._periodic_loop).start()
@@ -65,14 +52,10 @@ class DispatchingTask():
                 cmd, *arg = self.qin.get().split(maxsplit=1)
             except ValueError:  # if the split does not work
                 continue
-            print('CMD: ',cmd)
-            if cmd.lower() not in self._handlers:
-                print('No handler for command ' + cmd)
-            else:
-                try:
-                    self._handlers[cmd.lower()](*arg)
-                except Exception as e:
-                    print('Exception handling command %s: %s' % (cmd, str(e)))
+            try:
+                self.dispatcher.dispatch(cmd, *arg)
+            except DispatchError as e:
+                print(e)
 
     @handler('quit')
     def quit_handler(self):
