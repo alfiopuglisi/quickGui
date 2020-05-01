@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import io
 import time
 import queue
 import socket
@@ -34,26 +35,30 @@ class QueueClient():
         self.host = host
         self.port = port
         self.time_to_die = False
+        self.connected = False
 
     def run(self):
+        '''
+        Main client loop
 
+        Loop forever trying to reconnect if the connection fails,
+        and keep the queues active in any case.
+        '''
         while not self.time_to_die:
             self.connect()
-            while not self.time_to_die:
-                try:
-                    r, _, _ = select.select([self.sock, self.qout], [], [])
-                    if self.sock in r:
-                        self.read()
-                    if self.qout in r:
-                        self.write()
-                except DisconnectedException:
-                    self.disconnect()
-                    break
+            try:
+                r, _, _ = select.select([self.sock, self.qout], [], [])
+                if self.qout in r:
+                    self.write()
+                if self.sock in r:
+                    self.read()
+            except DisconnectedException:
+                self.disconnect()
 
     def read(self):
         msg = None
         try:
-            msg = self.sfile.readline()
+            msg = self.sockfile.readline()
             if msg:
                 self.qin.put(msg, block=False)
             else:
@@ -71,11 +76,12 @@ class QueueClient():
 
             # Do not propagate quit messages, it's our GUI shutting down
             if msg.lower() == 'quit':
+                print('Client has quit, we quit too')
                 self.time_to_die = True
                 raise DisconnectedException
 
-            self.sfile.write(msg + '\n')
-            self.sfile.flush()
+            self.sockfile.write(msg + '\n')
+            self.sockfile.flush()
         except queue.Empty:
             return
         except OSError as e:
@@ -83,21 +89,24 @@ class QueueClient():
             raise DisconnectedException
 
     def connect(self):
-        while not self.time_to_die:
+
+        if not self.connected:
+            # Provide a fake sockfile for read/write in case we don't connect
+            self.sockfile = io.StringIO('')
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 print('connecting to ', self.host, self.port)
                 self.sock.connect((self.host, self.port))
-                self.sfile = self.sock.makefile('rw')
+                self.sockfile = self.sock.makefile('rw')
+                self.connected = True
                 print('Connected!')
-                break
             except Exception as e:
                 print(e)
-            time.sleep(1)
+                time.sleep(1)   # Slow down reconnect loop
 
     def disconnect(self):
         try:
-            self.sock.shutdown()
+            self.connected = False
             self.sock.close()
         except Exception:
             pass

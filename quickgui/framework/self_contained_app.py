@@ -62,15 +62,10 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
         t.start()
         joinables.append(t)
 
-    # Start GUI (with reversed queues)
+    # Start GUI in foreground (with reversed queues)
     # This call will block until the gui quits.
     if gui:
         gui(qout_gui, qin)
-
-        if task or gui_client:
-            # Shutdown task when GUI exits
-            print('start_app(): stopping task')
-            qin.put('QUIT')
 
     for joinable in joinables:
         joinable.join()

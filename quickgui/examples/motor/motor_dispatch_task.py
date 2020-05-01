@@ -10,7 +10,6 @@ class Motor(DispatchingTask):
 
     def __init__(self, qin, qout, motor_class, simul_class):
         super().__init__(qin, qout)
-        self.time_to_die = False
         self.motor_class = motor_class
         self.simul_class = simul_class
         self.period = 0.5
