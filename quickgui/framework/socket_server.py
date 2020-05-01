@@ -10,12 +10,21 @@ class QueueServer(socketserver.ThreadingTCPServer):
     Socket server for task queues.
 
     Each client is served with a dedicated thread. Data coming from all
-    clients is put into the task's input queue. Doming
+    clients is put into the task's input queue. Data coming
     from the task's output queue is replicated across all clients. If
     a client connection is too slow, some of the output data may be dropped.
+
+    qint and qout are seen from the task's perspective, so qin is data
+    going to the task, and qout is data going to the clients.
+
+    This server uses daemonic threads in order to be able to shutdown
+    even while handler threads are performing blocking I/O like readline().
+    Shutdown is initiated automatically if the 'quit' message is seen
+    passing from the task to the clients.
     '''
+
     allow_reuse_address = True
-    daemon_threads = True
+    daemon_threads = True   # Allow shutdown without waiting for threads
 
     def __init__(self, HOST, PORT, handler, qin, qout):
         super().__init__((HOST, PORT), handler)
@@ -33,6 +42,11 @@ class QueueServer(socketserver.ThreadingTCPServer):
         del self.qout_clients[client_id]
 
     def fill_clients(self):
+        '''
+        Get data from the qout queue and send it to all client threads.
+
+        Stop when the command 'quit' has seen passing through the queue.
+        '''
         while True:
             data = self.qout.get()
             for k, q in self.qout_clients.items():
@@ -58,6 +72,12 @@ class QueueHandler(socketserver.StreamRequestHandler):
     '''
 
     def handle(self):
+        '''Handler for data coming from the client's socket.
+
+        Loops forever until:
+        - the client disconnects, or
+        - the server is shutdown.
+        '''
         self._time_to_die = False
         self._p = threading.Thread(target=self.handle_out)
         self._p.start()
@@ -76,7 +96,7 @@ class QueueHandler(socketserver.StreamRequestHandler):
         print('Input thread exiting')
 
     def handle_out(self):
-
+        '''Handler for data going to the client's socket'''
         qout = self.server.get_qout_copy(self.request)
         while not self._time_to_die:
             try:
@@ -107,4 +127,13 @@ def _start_server(host, port, qin, qout):
 
 
 def get_server(host, port):
+    '''Get a TCP server adapter
+
+    Returns a callable that, when called, produces a TCP server
+    running on `host`:`port`, and can be used to connect the task
+    input/output queues to a TCP socket.
+
+    The callable will have two arguments: `qin` and `qout`, that must be
+    the same queues used in the task's instantiation.
+    '''
     return functools.partial(_start_server, host, port)
