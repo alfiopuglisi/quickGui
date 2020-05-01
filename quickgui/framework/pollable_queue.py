@@ -12,12 +12,18 @@ class PollableQueue(queue.Queue):
     Recipes for Mastering Python 3
     By Brian Jones, David Beazley
 
+    "writing a program that uses several chunks of code from this
+    book does not require permission."
+
     This queue can be used in the first argument (readable sockets)
     of a select() call. When something is in the queue, select() returns
     that the queue is readable.
 
     The trick is a small loopback socket that keeps in sync with the
     queue's contents.
+
+    apuglisi 2020-04-30  modified get() and put() methods
+                         to accept the same parameter as queue.Queue.
     '''
 
     def __init__(self):
@@ -38,12 +44,13 @@ class PollableQueue(queue.Queue):
     def fileno(self):
         return self._getsocket.fileno()
 
-    def put(self, item):
-        super().put(item)
+    def put(self, item, block=True, timeout=None):
+        super().put(item, block, timeout)
         self._putsocket.send(b'x')
 
-    def get(self, block=False, timeout=0):
-        item =  super().get(block=block, timeout=timeout)
+    def get(self, block=True, timeout=None):
+        item = super().get(block, timeout)
+        # perform recv() only if get() is successful
         self._getsocket.recv(1)
         return item
    

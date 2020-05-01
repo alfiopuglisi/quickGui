@@ -76,6 +76,7 @@ class DispatchingTask():
 
     @handler('quit')
     def quit_handler(self):
+        self.qout.put('quit')  # Tell clients that we are quitting
         self.time_to_die = True
 
     @handler('periodic')

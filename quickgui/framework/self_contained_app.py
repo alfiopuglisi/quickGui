@@ -64,7 +64,7 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
     if gui:
         gui(qout_gui, qin)
 
-        if task:
+        if task or gui_client:
             # Shutdown task when GUI exits
             print('start_app(): stopping task')
             qin.put('QUIT')

@@ -24,7 +24,10 @@ class DispatchingQtGui(QuickQtGui):
 
     def _received(self, i):
         value = self._qlistener.get(i)
-        cmd, value = value.split(maxsplit=1)
+        try:
+            cmd, value = value.split(maxsplit=1)
+        except ValueError:  # if the split does not work
+            return        
         try:
             self._handlers[cmd.upper()](value)
         except KeyError:

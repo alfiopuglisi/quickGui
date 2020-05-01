@@ -9,7 +9,7 @@ import threading
 import functools
 
 
-class ReconnectException(Exception):
+class DisconnectedException(Exception):
     pass
 
 
@@ -25,7 +25,7 @@ class QueueClient():
     def run(self):
 
         while not self.time_to_die:
-            self.reconnect()
+            self.connect()
             while not self.time_to_die:
                 try:
                     r, _, _ = select.select([self.sock, self.qin], [], [])
@@ -33,8 +33,9 @@ class QueueClient():
                         self.read()
                     if self.qin in r:
                         self.write()
-                except ReconnectException:
+                except DisconnectedException:
                     self.disconnect()
+                    break
 
     def read(self):
         msg = None
@@ -44,25 +45,31 @@ class QueueClient():
                 self.qout.put(msg, block=False)
             else:
                 print('recv giving up')
-                raise ReconnectException
+                raise DisconnectedException
         except queue.Full:
             return
         except OSError as e:
             print('Exception: ', e)
-            raise ReconnectException
+            raise DisconnectedException
 
     def write(self):
         try:
             msg = self.qin.get(block=False)
+
+            # Do not propagate quit messages, it's our GUI shutting down
+            if msg.lower() == 'quit':
+                self.time_to_die = True
+                raise DisconnectedException
+
             self.sfile.write(msg + '\n')
             self.sfile.flush()
         except queue.Empty:
             return
         except OSError as e:
             print('Send failed', e)
-            raise ReconnectException
+            raise DisconnectedException
 
-    def reconnect(self):
+    def connect(self):
         while not self.time_to_die:
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
