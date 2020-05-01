@@ -22,7 +22,6 @@ class QueueServer(socketserver.ThreadingTCPServer):
         self.qin = qin
         self.qout = qout
         self.qout_clients = {}
-        self.time_to_die = False
         threading.Thread(target=self.fill_clients).start()
 
     def get_qout_copy(self, client_id):
@@ -63,7 +62,7 @@ class QueueHandler(socketserver.StreamRequestHandler):
         self._p = threading.Thread(target=self.handle_out)
         self._p.start()
 
-        while not self._time_to_die:
+        while True:
             print('Input thread looping')
             try:
                 msg = self.rfile.readline().strip()
@@ -94,7 +93,7 @@ class QueueHandler(socketserver.StreamRequestHandler):
         print('Output thread exiting')
 
     def finish(self):
-        self._time_to_die = True
+        self._time_to_die = True   # Stop the handle_out thread
         self._p.join()
         self.server.delete_qout_copy(self.request)
 
