@@ -64,14 +64,8 @@ class MotorGui(QuickQtGui):
         sim_on.clicked.connect(self.on_button_sim_on)
         sim_off.clicked.connect(self.on_button_sim_off)
 
-        app.aboutToQuit.connect(self.closing)
-
         window.show()
         app.exec_()
-
-    def closing(self):
-        print('closing GUI')
-        self.send('quit')
 
     def on_button_move(self):
         self.send('MOVE ' + self.moveedit.text())
@@ -95,3 +89,5 @@ class MotorGui(QuickQtGui):
     def refresh_simul(self, data):
         simul = 'On' if int(data) else 'Off'
         self.sim_status.setText(simul)
+
+# ___oOo___

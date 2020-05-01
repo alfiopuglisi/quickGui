@@ -13,4 +13,4 @@ from quickgui.framework import get_client, start
 host = 'localhost'
 port = 3333
 
-start(gui=MotorGui, gui_client = get_client(host, port))
+start(gui=MotorGui, gui_client=get_client(host, port))
