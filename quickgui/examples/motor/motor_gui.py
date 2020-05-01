@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QApplication, QLabel, QWidget
 from PyQt5.QtWidgets import QPushButton
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout, QVBoxLayout
 
-from quickgui.framework.dispatching_gui import DispatchingQtGui, handler
+from quickgui.framework import DispatchingQtGui, handler
 
 
 class MotorGui(DispatchingQtGui):
