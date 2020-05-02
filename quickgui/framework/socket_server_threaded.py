@@ -83,7 +83,7 @@ class QueueHandler(socketserver.StreamRequestHandler):
     Writes all incoming data into the task input queue, and sends
     all the task's output into the socket. The two queues are managed
     by separate threads in order to simplify the blocking calls management.
-    
+
     When the connection is closed for any reason, all the threads exit
     cleanly catching their exceptions.
     '''
@@ -105,13 +105,15 @@ class QueueHandler(socketserver.StreamRequestHandler):
 
     def handle_out(self):
         '''Handler for data going to the client's socket'''
-        
-        with self.server.qout_copy(self.request) as qout:
+
+        # Use the client address as an unique id
+        with self.server.qout_copy(self.client_address) as qout:
 
             for msg in iter(qout.get, None):
                 self.wfile.write(msg.encode('utf-8'))
 
         print('Output thread exiting')
+
 
 def _start_server(host, port, qin, qout):
 
