@@ -15,7 +15,7 @@ import time
 import threading
 
 from quickgui.framework.quick_base import QuickBase, handler, DispatchError
-
+from quickgui.framework.quick_base import time_to_die
 
 def periodic(f):
     '''Decorator for periodic handler'''
@@ -37,29 +37,23 @@ class QuickTask(QuickBase):
 
     def __init__(self, qin, qout):
         super().__init__(qin, qout)
-        self.time_to_die = False
         self.period = 1
 
     def run(self):
         threading.Thread(target=self._periodic_loop).start()
 
-        while not self.time_to_die:
+        while not time_to_die():
             try:
                 self.dispatch(self.qin.get())
             except DispatchError as e:
                 print(e)
-
-    @handler('quit')
-    def quit_handler(self):
-        self.send('quit')     # Tell clients that we are quitting
-        self.time_to_die = True
 
     @handler('periodic')
     def _periodic(self):
         pass
 
     def _periodic_loop(self):
-        while not self.time_to_die:
+        while not time_to_die():
             time.sleep(self.period)
             self.send_to_myself('periodic')
 

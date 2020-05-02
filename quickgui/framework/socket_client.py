@@ -7,6 +7,7 @@ import socket
 import select
 import functools
 
+from quickgui.framework.quick_base import time_to_die
 
 class DisconnectedException(Exception):
     '''Socket was disconnected'''
@@ -34,7 +35,6 @@ class QueueClient():
         self.qout = qout
         self.host = host
         self.port = port
-        self.time_to_die = False
         self.connected = False
 
     def run(self):
@@ -49,7 +49,7 @@ class QueueClient():
         read/write becomes too complicated when the underlying socket
         changes without warning.
         '''
-        while not self.time_to_die:
+        while not time_to_die():
             self.connect()
             try:
                 r, _, _ = select.select([self.sock, self.qout], [], [])
@@ -78,12 +78,6 @@ class QueueClient():
     def write(self):
         try:
             msg = self.qout.get(block=False)
-
-            # Do not propagate quit messages, it's our GUI shutting down
-            if msg.lower()[:4] == 'quit':
-                print('Client has quit, we quit too')
-                self.time_to_die = True
-                raise DisconnectedException
 
             self.sockfile.write(msg + '\n')
             self.sockfile.flush()

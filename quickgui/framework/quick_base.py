@@ -32,6 +32,17 @@ def handler_str(cmd):
     return handler(cmd, validator=str)
 
 
+its_time_to_die = False
+
+
+def time_to_die():
+    return its_time_to_die
+
+
+def set_time_to_die(value):
+    global its_time_to_die
+    its_time_to_die = value
+
 
 class QuickBase():
 

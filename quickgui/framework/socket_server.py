@@ -4,6 +4,8 @@ import select
 import socket
 import functools
 
+from quickgui.framework.quick_base import time_to_die
+
 
 def serve_forever(host, port, qin, qout):
     '''
@@ -26,7 +28,7 @@ def serve_forever(host, port, qin, qout):
 
     sockets = []
 
-    while True:
+    while not time_to_die():
         r, _, _ = select.select([serversocket, qout] + sockets, [], [])
         _, w, _ = select.select([], sockets, [], 0)
 
@@ -40,23 +42,18 @@ def serve_forever(host, port, qin, qout):
         except queue.Empty:
             msg = ''
 
-        if msg.strip().lower().startswith('quit'):  # Task has quit
-            print('task has quit, shutting down')
-            return
-
         for sock in sockets:
             try:
                 if msg and (sock in w):
                     sock.sendall(msg.encode('utf-8'))
                 if sock in r:
                     data = sock.recv(128)  # NewLineQueue will take care
-                                           # of message boundaries.
-                    if data:
+                    if data:               # of message boundaries.
                         qin.put(data.decode('utf-8'))
                     else:
                         raise Exception('Disconnected')
             except Exception as e:
-                print('Removing client socket %s: %s' % (sock.getpeername(), e))
+                print('Removing client socket: %s' % e)
                 sockets.remove(sock)
 
 

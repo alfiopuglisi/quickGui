@@ -32,9 +32,6 @@ class QuickQtGui(QuickBase):
         except DispatchError as e:
             print(e)
 
-    def __del__(self):
-        self.send('quit')
-
     class _QueueListener(QThread):
 
         signal = pyqtSignal(str)

@@ -12,7 +12,7 @@ import threading
 from collections.abc import Iterable
 
 from quickgui.framework.queues import MultiQueue, NewLineQueue
-
+from quickgui.framework.quick_base import set_time_to_die
 
 def start(task=None, gui=None, task_servers=None, gui_client=None):
     '''
@@ -70,6 +70,8 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
     # the quit message upstream.
     import gc
     gc.collect()
+
+    set_time_to_die(True)
 
     for joinable in joinables:
         joinable.join()

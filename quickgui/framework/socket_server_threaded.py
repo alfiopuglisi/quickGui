@@ -3,8 +3,10 @@ import queue
 import threading
 import functools
 import socketserver
-
 from contextlib import contextmanager
+
+from quickgui.framework.quick_base import time_to_die
+
 
 class QueueServer(socketserver.ThreadingTCPServer):
     '''
@@ -60,7 +62,7 @@ class QueueServer(socketserver.ThreadingTCPServer):
 
         Stop when the command 'quit' has seen passing through the queue.
         '''
-        while True:
+        while not time_to_die():
             data = self.qout.get()
             with self.lock:
                 for q in self.qout_clients.values():
@@ -70,10 +72,7 @@ class QueueServer(socketserver.ThreadingTCPServer):
                         # Slow clients will drop messages and
                         # should not block the rest.
                         pass
-            if data.strip().lower() == 'quit':  # Task has quit
-                print('task has quit, shutting down')
-                self.shutdown()
-                return
+        self.shufdown()
 
 
 class QueueHandler(socketserver.StreamRequestHandler):
