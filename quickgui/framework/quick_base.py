@@ -56,8 +56,7 @@ class QuickBase():
 
         cmd = cmd.lower()
         if cmd not in self._handlers:
-            print('No handler for command ' + cmd)
-            return
+            raise DispatchError('No handler for command ' + cmd)
 
         handler = self._handlers[cmd]
         if len(arg) > 0 and handler.validator is not None:
@@ -80,4 +79,3 @@ class QuickBase():
         if cmd[-1] != '\n':
             cmd += '\n'
         self.qin.put(cmd)
-        

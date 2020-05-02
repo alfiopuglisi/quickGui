@@ -66,16 +66,16 @@ class NewLineQueue(PollableQueue):
         if not isinstance(s, str):
             raise TypeError('A NewLineQueue only accepts strings')
 
-        lines = (self._outbuf + s).splitlines(keepends=True)
+        *lines, last_line = (self._outbuf + s).splitlines(keepends=True)
 
-        for line in lines[:-1]:
+        for line in lines:
             super().put(line, block, timeout)
 
-        if lines[-1].endswith('\n'):
-            super().put(lines[-1], block, timeout)
+        if last_line.endswith('\n'):
+            super().put(last_line, block, timeout)
             self._outbuf = ''
         else:
-            self._outbuf = lines[-1]
+            self._outbuf = last_line
 
 
 class MultiQueue():

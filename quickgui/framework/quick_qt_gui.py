@@ -26,8 +26,7 @@ class QuickQtGui(QuickBase):
         self._qlistener.signal.connect(self._received)
         self._qlistener.start()
 
-    def _received(self, i):
-        msg = self._qlistener.get(i)
+    def _received(self, msg):
         try:
             self.dispatch(msg)
         except DispatchError as e:
@@ -38,22 +37,13 @@ class QuickQtGui(QuickBase):
 
     class _QueueListener(QThread):
 
-        signal = pyqtSignal(int)
+        signal = pyqtSignal(str)
 
         def __init__(self, qin):
             super().__init__()
             self.qin = qin
-            self.results = {}
-            self.counter = 0
 
         def run(self):
             while 1:
-                data = self.qin.get()
-                self.results[self.counter] = data
-                self.signal.emit(self.counter)
-                self.counter += 1
-
-        def get(self, i):
-            value = self.results[i]
-            del self.results[i]
-            return value
+                msg = self.qin.get()
+                self.signal.emit(msg)
