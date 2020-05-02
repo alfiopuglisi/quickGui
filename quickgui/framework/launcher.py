@@ -65,13 +65,7 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
     # This call will block until the gui quits.
     if gui:
         gui(qout_gui, qin)
-
-    # Force destruction of the QuickQtGui object so that it sends
-    # the quit message upstream.
-    import gc
-    gc.collect()
-
-    set_time_to_die(True)
+        set_time_to_die(True)
 
     for joinable in joinables:
         joinable.join()
