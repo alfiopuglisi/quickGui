@@ -12,5 +12,4 @@ from quickgui.framework import get_server, start
 host = ''
 port = 3333
 
-
 start(task=task, gui=MotorGui, task_servers = get_server(host, port))

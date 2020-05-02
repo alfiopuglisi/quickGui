@@ -25,15 +25,15 @@ def serve_forever(host, port, qin, qout):
     print("started server on port %d" % port)
 
     sockets = []
-    
+
     while True:
         r, _, _ = select.select([serversocket, qout] + sockets, [], [])
         _, w, _ = select.select([], sockets, [], 0)
 
         if serversocket in r:
             sock, address = serversocket.accept()
-            print('Accepted new connection from ', address)
             sockets.append(sock)
+            print('Accepted new connection from ', address)
 
         try:
             msg = qout.get(block=False)
@@ -49,7 +49,8 @@ def serve_forever(host, port, qin, qout):
                 if msg and (sock in w):
                     sock.sendall(msg.encode('utf-8'))
                 if sock in r:
-                    data = sock.recv(128)
+                    data = sock.recv(128)  # NewLineQueue will take care
+                                           # of message boundaries.
                     if data:
                         qin.put(data.decode('utf-8'))
                     else:
