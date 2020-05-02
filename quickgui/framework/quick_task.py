@@ -14,8 +14,7 @@ even if the task does not do anything.
 import time
 import threading
 
-from quickgui.framework.command_dispacher import CommandDispatcher, handler, \
-                                                 DispatchError
+from quickgui.framework.quick_base import QuickBase, handler, DispatchError
 
 
 def periodic(f):
@@ -23,7 +22,7 @@ def periodic(f):
     return handler('periodic')(f)
 
 
-class QuickTask():
+class QuickTask(QuickBase):
     '''
     A task that dispatches commands to handler functions
 
@@ -37,35 +36,18 @@ class QuickTask():
     '''
 
     def __init__(self, qin, qout):
-        self.qin = qin
-        self.qout = qout
+        super().__init__(qin, qout)
         self.time_to_die = False
         self.period = 1
-        self.dispatcher = CommandDispatcher()
-        self.dispatcher.collect_handlers_from(self)
 
     def run(self):
         threading.Thread(target=self._periodic_loop).start()
 
         while not self.time_to_die:
             try:
-                cmd, *arg = self.qin.get().split(maxsplit=1)
-            except ValueError:  # if the split does not work
-                continue
-            try:
-                self.dispatcher.dispatch(cmd, *arg)
+                self.dispatch(self.qin.get())
             except DispatchError as e:
                 print(e)
-
-    def send(self, cmd):
-        if cmd[-1] != '\n':
-            cmd += '\n'
-        self.qout.put(cmd)
-
-    def send_to_myself(self, cmd):
-        if cmd[-1] != '\n':
-            cmd += '\n'
-        self.qin.put(cmd)
 
     @handler('quit')
     def quit_handler(self):

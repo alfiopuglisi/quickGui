@@ -1,7 +1,7 @@
 
 
 from .quick_task import QuickTask, periodic
-from .command_dispacher import handler, handler_int, handler_float, handler_str
+from .quick_base import handler, handler_int, handler_float, handler_str
 from .quick_qt_gui import QuickQtGui
 from .launcher import start, self_contained_app
 from .socket_client import get_client
