@@ -61,7 +61,12 @@ class QuickTask():
         if cmd[-1] != '\n':
             cmd += '\n'
         self.qout.put(cmd)
-   
+
+    def send_to_myself(self, cmd):
+        if cmd[-1] != '\n':
+            cmd += '\n'
+        self.qin.put(cmd)
+
     @handler('quit')
     def quit_handler(self):
         self.send('quit')     # Tell clients that we are quitting
@@ -74,6 +79,6 @@ class QuickTask():
     def _periodic_loop(self):
         while not self.time_to_die:
             time.sleep(self.period)
-            self.qin.put('periodic')
+            self.send_to_myself('periodic')
 
 # ___oOo___

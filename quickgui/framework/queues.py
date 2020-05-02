@@ -53,4 +53,48 @@ class PollableQueue(queue.Queue):
         # perform recv() only if get() is successful
         self._getsocket.recv(1)
         return item
-   
+
+
+class NewLineQueue(PollableQueue):
+    '''Queue that forces messages to be terminated with newlines'''
+
+    def __init__(self):
+        super().__init__()
+        self._outbuf = ''
+
+    def put(self, s, block=True, timeout=None):
+        if not isinstance(s, str):
+            raise TypeError('A NewLineQueue only accepts strings')
+
+        lines = (self._outbuf + s).splitlines(keepends=True)
+
+        for line in lines[:-1]:
+            super().put(line, block, timeout)
+
+        if lines[-1].endswith('\n'):
+            super().put(lines[-1], block, timeout)
+            self._outbuf = ''
+        else:
+            self._outbuf = lines[-1]
+
+
+class MultiQueue():
+    '''
+    Queue fan-out.
+
+    Builds N queues and replicates the put method across all of them.
+    Sub-queues can be accessed with operator[].
+
+    The queue type is passed in the constructor as `klass`. Anything
+    that implements a `put` method is OK.
+    '''
+
+    def __init__(self, n, klass):
+        self.qlist = [klass() for i in range(n)]
+
+    def __getitem__(self, idx):
+        return self.qlist[idx]
+
+    def put(self, *args, **kwargs):
+        for q in self.qlist:
+            q.put(*args, **kwargs)

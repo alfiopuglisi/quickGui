@@ -11,8 +11,7 @@ import queue
 import threading
 from collections.abc import Iterable
 
-from quickgui.framework.multi_queue import MultiQueue
-from quickgui.framework.pollable_queue import PollableQueue
+from quickgui.framework.queues import MultiQueue, NewLineQueue
 
 
 def start(task=None, gui=None, task_servers=None, gui_client=None):
@@ -42,8 +41,8 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
         if gui:
             n_out_queues += 1
 
-        qin = PollableQueue()
-        qout = MultiQueue(n_out_queues)
+        qin = NewLineQueue()
+        qout = MultiQueue(n_out_queues, NewLineQueue)
         qout_gui = qout[-1]
 
         for i, server in enumerate(task_servers):
@@ -56,8 +55,8 @@ def start(task=None, gui=None, task_servers=None, gui_client=None):
         joinables.append(t)
 
     if gui_client:
-        qin = PollableQueue()
-        qout_gui = PollableQueue()
+        qin = NewLineQueue()
+        qout_gui = NewLineQueue()
         t = threading.Thread(target=gui_client, args=(qout_gui, qin))
         t.start()
         joinables.append(t)
