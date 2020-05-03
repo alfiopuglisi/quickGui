@@ -5,7 +5,8 @@ import random
 from quickgui.framework import QuickTask, periodic, \
                                handler_int, handler_float
 
-class Motor(QuickTask):
+
+class MotorTask(QuickTask):
     '''A class containing a motor, which can be real or simulated.'''
 
     def __init__(self, qin, qout, motor_class, simul_class):
@@ -97,7 +98,7 @@ class RealMotor():
 
 def task(qin, qout):
     '''The task visible outside'''
-    motor = Motor(qin, qout, RealMotor, SimulatedMotor)
+    motor = MotorTask(qin, qout, RealMotor, SimulatedMotor)
     motor.run()
 
 # ___oOo___
