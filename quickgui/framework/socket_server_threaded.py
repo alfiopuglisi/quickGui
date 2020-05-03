@@ -63,7 +63,13 @@ class QueueServer(socketserver.ThreadingTCPServer):
         Stop when the command 'quit' has seen passing through the queue.
         '''
         while not time_to_die():
-            data = self.qout.get()
+
+            # Execute the while loop every now and then
+            try:
+                data = self.qout.get(timeout=1)
+            except queue.Empty:
+                continue
+
             with self.lock:
                 for q in self.qout_clients.values():
                     try:

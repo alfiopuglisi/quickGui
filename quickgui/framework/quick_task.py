@@ -12,10 +12,12 @@ even if the task does not do anything.
 '''
 
 import time
+import queue
 import threading
 
 from quickgui.framework.quick_base import QuickBase, handler, DispatchError
 from quickgui.framework.quick_base import time_to_die
+
 
 def periodic(f):
     '''Decorator for periodic handler'''
@@ -43,8 +45,15 @@ class QuickTask(QuickBase):
         threading.Thread(target=self._periodic_loop).start()
 
         while not time_to_die():
+
+            # Execute the while loop every now and then
             try:
-                self.dispatch(self.qin.get())
+                msg = self.qin.get(timeout=1)
+            except queue.Empty:
+                continue
+
+            try:
+                self.dispatch(msg)
             except DispatchError as e:
                 print(e)
 
