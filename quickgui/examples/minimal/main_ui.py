@@ -8,4 +8,3 @@ from quickgui.examples.minimal.example_ui import ui
 from quickgui.framework import self_contained_app
 
 self_contained_app(task, ui)
-
